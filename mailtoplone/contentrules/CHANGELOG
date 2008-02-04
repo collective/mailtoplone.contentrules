@@ -1,4 +1,11 @@
 2008-02-04 mr_savage <hans-peter.locher@inquant.de>
+    * version 0.2 build 2
+    * added a new condition: SizeOfMail
+    * The condition enables the user to select a relational operator
+      (<=, >=) and a size(spezified in megabytes). It therefore compares the size of the mail
+      to the user specified size.
+
+2008-02-04 mr_savage <hans-peter.locher@inquant.de>
     * version 0.2 build 1
     * added a new condition: HasPartOfType
     * The condition checks each part of the mail for a 

@@ -41,6 +41,7 @@ from plone.app.contentrules.rule import Rule
 
 from mailtoplone.contentrules.conditions.emailheader import EmailHeaderCondition, EmailHeaderEditForm
 from mailtoplone.contentrules.conditions.haspartoftype import HasPartOfTypeCondition, HasPartOfTypeEditForm
+from mailtoplone.contentrules.conditions.sizeofmail import SizeOfMailCondition, SizeOfMailEditForm
 from mailtoplone.contentrules.actions.deliver import DeliverAction, DeliverEditForm
 
 MULTIMSG="""MIME-Version: 1.0
@@ -185,6 +186,71 @@ class TestSetup(MailToPloneContentrulesTestCase):
         e.type = 'video/mpeg'
         ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
         self.assertEquals(False, ex())
+       
+    # condition: SizeOfMail
+    def testSizeOfMailRegistered(self):
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.SizeOfMail')
+        self.assertEquals('mailtoplone.contentrules.conditions.SizeOfMail', element.addview)
+        self.assertEquals('edit', element.editview)
+        self.assertEquals(None, element.for_)
+        self.assertEquals(IObjectEvent, element.event)
+    
+    def testSizeOfMailInvokeAddView(self): 
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.SizeOfMail')
+        storage = getUtility(IRuleStorage)
+        storage[u'foo'] = Rule()
+        rule = self.portal.restrictedTraverse('++rule++foo')
+        
+        adding = getMultiAdapter((rule, self.portal.REQUEST), name='+condition')
+        addview = getMultiAdapter((adding, self.portal.REQUEST), name=element.addview)
+        
+        addview.createAndAdd(data={'operator' : '>=', 'size' : '10'})
+        
+        e = rule.conditions[0]
+        self.failUnless(isinstance(e, SizeOfMailCondition))
+        self.assertEquals('>=', e.operator)
+        self.assertEquals('10', e.size)
+    
+    def testSizeOfMailInvokeEditView(self): 
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.SizeOfMail')
+        e = SizeOfMailCondition()
+        editview = getMultiAdapter((e, self.folder.REQUEST), name=element.editview)
+        self.failUnless(isinstance(editview, SizeOfMailEditForm))
+
+    def testSizeOfMailExecutor(self):
+        e = SizeOfMailCondition()
+        self.portal.inbox.invokeFactory('Email', 'e1')
+        self.portal.inbox.e1.data = "x" * 1024 * 1024 * 2
+        
+        e.operator = '>='
+        e.size = 2
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.operator = '<='
+        e.size = 2
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.operator = '>='
+        e.size = 1
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.operator = '<='
+        e.size = 1
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(False, ex())
+
+        e.operator = '>='
+        e.size = 3
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(False, ex())
+
+        e.operator = '<='
+        e.size = 3
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
 
     # action: Deliver
     def testDeliverRegistered(self):

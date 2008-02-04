@@ -68,6 +68,36 @@
         editview="edit"
         />
 
+    <!-- SizeOfMail condition -->
+    
+    <!-- register the multiadapter -->
+    <adapter factory=".sizeofmail.SizeOfMailConditionExecutor" />
 
+    <!-- Add Form -->
+    <browser:page 
+      for="plone.app.contentrules.browser.interfaces.IRuleConditionAdding"
+      name="mailtoplone.contentrules.conditions.SizeOfMail"
+      class=".sizeofmail.SizeOfMailAddForm"
+      permission="cmf.ManagePortal"
+      />
+
+    <!-- Edit Form -->
+    <browser:page 
+      for=".sizeofmail.ISizeOfMailCondition"
+      name="edit"
+      class=".sizeofmail.SizeOfMailEditForm"
+      permission="cmf.ManagePortal"
+      />
+
+    <!-- ruleAction -->
+    <plone:ruleCondition
+        name="mailtoplone.contentrules.conditions.SizeOfMail"
+        title="Size of mail"
+        description="Checks the size of a mail (greater than or equal, less then or equal) against a user specified size in megabytes"
+        for="*"
+        event="zope.component.interfaces.IObjectEvent"
+        addview="mailtoplone.contentrules.conditions.SizeOfMail"
+        editview="edit"
+        />
 
 </configure>

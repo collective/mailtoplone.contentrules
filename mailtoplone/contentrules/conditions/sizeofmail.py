@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# File: haspartoftype.py
+# File: sizeofmail.py
 #
 # Copyright (c) InQuant GmbH
 #
@@ -35,40 +35,45 @@ from plone.contentrules.rule.interfaces import IExecutable, IRuleElementData
 
 from plone.app.contentrules.browser.formhelper import AddForm, EditForm 
 
-import email
 from mailtoplone.base.interfaces import IEmail
 from mailtoplone.contentrules import baseMessageFactory as _
 
-class IHasPartOfTypeCondition(Interface):
+class ISizeOfMailCondition(Interface):
     """Interface for the configurable aspects of a portal type condition.
     
     This is also used to create add and edit forms, below.
     """
-    type = schema.TextLine(title=_(u"Type"),
-                                    description=_(u"The contenttype/subtype pair to check for"),
+    operator = schema.Choice(title=_(u"Relational operator"),
+                                    description=_(u"The relational operator to be used"),
+                                    required=True,
+                                    values=['>=','<='],
+                                    default='>=')
+    size = schema.Int(title=_(u"Size"),
+                                    description=_(u"The size to check for in megabytes"),
                                     required=True)
 
          
-class HasPartOfTypeCondition(SimpleItem):
-    """The actual persistent implementation of the HasPartOfType condition.
+class SizeOfMailCondition(SimpleItem):
+    """The actual persistent implementation of the SizeOfMail condition.
     
     Note that we must mix in Explicit to keep Zope 2 security happy.
     """
-    implements(IHasPartOfTypeCondition, IRuleElementData)
-    type = u''
-    element = "mailtoplone.contentrules.conditions.HasPartOfType"
+    implements(ISizeOfMailCondition, IRuleElementData)
+    operator = u''
+    size = u''
+    element = "mailtoplone.contentrules.conditions.SizeOfMail"
     
     @property
     def summary(self):
-        return _(u"Check if the email contains a part with contenttype/subtype pair ${type}", mapping=dict(type=self.type))
+        return _(u"Check if mail is ${operator} ${size} megabytes", mapping=dict(operator=self.operator,size=self.size))
 
-class HasPartOfTypeConditionExecutor(object):
+class SizeOfMailConditionExecutor(object):
     """The executor for this condition.
     
     This is registered as an adapter in configure.zcml
     """
     implements(IExecutable)
-    adapts(Interface, IHasPartOfTypeCondition, Interface)
+    adapts(Interface, ISizeOfMailCondition, Interface)
          
     def __init__(self, context, element, event):
         self.context = context
@@ -77,38 +82,40 @@ class HasPartOfTypeConditionExecutor(object):
 
     def __call__(self):
         obj = self.event.object
-        type = self.element.type
+        operator = self.element.operator
+        size = self.element.size * 1024 * 1024
         if not IEmail.providedBy(obj):
             return False
-        
-        mailobj = email.message_from_string(obj.data)
-        for part in mailobj.walk():
-            if part.get_content_type() == type:
-                return True
-        
-        return False
+       
+        if operator == '>=':
+            return len(obj.data) >= size
 
-class HasPartOfTypeAddForm(AddForm):
-    """An add form for HasPartOfType rule conditions.
+        if operator == '<=':
+            return len(obj.data) <= size
+
+        return False
+        
+class SizeOfMailAddForm(AddForm):
+    """An add form for SizeOfMail rule conditions.
     """
-    form_fields = form.FormFields(IHasPartOfTypeCondition)
-    label = _(u"Add HasPartOfType Condition")
-    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified contenttype/subtype")
+    form_fields = form.FormFields(ISizeOfMailCondition)
+    label = _(u"Add SizeOfMail Condition")
+    description = _(u"An SizeOfMail Condition checks the size of a mail (<=, >=) against a user specified size in megabyte")
     form_name = _(u"Configure element")
     
     def create(self, data):
-        c = HasPartOfTypeCondition()
+        c = SizeOfMailCondition()
         form.applyChanges(c, self.form_fields, data)
         return c
 
-class HasPartOfTypeEditForm(EditForm):
+class SizeOfMailEditForm(EditForm):
     """An edit form for portal type conditions
     
     Formlib does all the magic here.
     """
-    form_fields = form.FormFields(IHasPartOfTypeCondition)
-    label = _(u"Edit HasPartOfType Condition")
-    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified contenttype/subtype")
+    form_fields = form.FormFields(ISizeOfMailCondition)
+    label = _(u"Edit SizeOfMail Condition")
+    description = _(u"An SizeOfMail Condition checks the size of a mail (<=, >=) against a user specified size in megabyte")
     form_name = _(u"Configure element")
 
 # vim: set ft=python ts=4 sw=4 expandtab :
