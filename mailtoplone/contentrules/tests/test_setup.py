@@ -39,13 +39,25 @@ from plone.contentrules.rule.interfaces import IExecutable
 
 from plone.app.contentrules.rule import Rule
 
-import mailtoplone.contentrules.conditions.emailheader
-import mailtoplone.contentrules.actions.deliver
+from mailtoplone.contentrules.conditions.emailheader import EmailHeaderCondition, EmailHeaderEditForm
+from mailtoplone.contentrules.conditions.haspartoftype import HasPartOfTypeCondition, HasPartOfTypeEditForm
+from mailtoplone.contentrules.actions.deliver import DeliverAction, DeliverEditForm
 
-from mailtoplone.contentrules.conditions.emailheader import EmailHeaderCondition
-from mailtoplone.contentrules.conditions.emailheader import EmailHeaderEditForm
-from mailtoplone.contentrules.actions.deliver import DeliverAction
-from mailtoplone.contentrules.actions.deliver import DeliverEditForm
+MULTIMSG="""MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="next"
+Date: Fri, 11 Jan 2008 14:22:33 +0100
+From: "Nobody"
+To: "Nobody"
+
+--next
+Content-Type: text/plain;
+--next
+Content-Type: text/calendar;
+--next
+Content-Type: image/png;
+--next--
+"""
 
 class DummyEvent(object):
     implements(IObjectEvent)
@@ -128,6 +140,51 @@ class TestSetup(MailToPloneContentrulesTestCase):
         ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e6)), IExecutable)
         self.assertEquals(False, ex())
 
+    # condition: HasPartOfType
+    def testHasPartOfTypeRegistered(self):
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.HasPartOfType')
+        self.assertEquals('mailtoplone.contentrules.conditions.HasPartOfType', element.addview)
+        self.assertEquals('edit', element.editview)
+        self.assertEquals(None, element.for_)
+        self.assertEquals(IObjectEvent, element.event)
+    
+    def testHasPartOfTypeInvokeAddView(self): 
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.HasPartOfType')
+        storage = getUtility(IRuleStorage)
+        storage[u'foo'] = Rule()
+        rule = self.portal.restrictedTraverse('++rule++foo')
+        
+        adding = getMultiAdapter((rule, self.portal.REQUEST), name='+condition')
+        addview = getMultiAdapter((adding, self.portal.REQUEST), name=element.addview)
+        
+        addview.createAndAdd(data={'type' : 'text/calendar'})#
+        
+        e = rule.conditions[0]
+        self.failUnless(isinstance(e, HasPartOfTypeCondition))
+        self.assertEquals('text/calendar', e.type)#
+    
+    def testHasPartOfTypeInvokeEditView(self): 
+        element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.HasPartOfType')
+        e = HasPartOfTypeCondition()
+        editview = getMultiAdapter((e, self.folder.REQUEST), name=element.editview)
+        self.failUnless(isinstance(editview, HasPartOfTypeEditForm))
+
+    def testHasPartOfTypeExecutor(self):
+        e = HasPartOfTypeCondition()
+        self.portal.inbox.invokeFactory('Email', 'e1')
+        self.portal.inbox.e1.data = MULTIMSG
+        
+        e.type = 'text/calendar'
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.type = 'image/png'
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.type = 'video/mpeg'
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(False, ex())
 
     # action: Deliver
     def testDeliverRegistered(self):

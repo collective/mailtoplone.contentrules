@@ -33,10 +33,14 @@ Conditions
 
 Email Header:
 
-     Checks a specified header for a specified value, value can be specified as regular expression
-     (will check for simple containment if value isn't a regular
-     expression).
+    Checks a specified header for a specified value, value can be specified as regular expression
+    (will check for simple containment if value isn't a regular
+    expression).
 
+Has part of type:
+
+    Checks if the email contains a part of specified contenttype/subtype
+    pair.
 
 Actions
 *******

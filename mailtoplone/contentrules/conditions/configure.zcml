@@ -36,5 +36,38 @@
         editview="edit"
         />
 
+    <!-- HasPartOfType condition -->
+    
+    <!-- register the multiadapter -->
+    <adapter factory=".haspartoftype.HasPartOfTypeConditionExecutor" />
+
+    <!-- Add Form -->
+    <browser:page 
+      for="plone.app.contentrules.browser.interfaces.IRuleConditionAdding"
+      name="mailtoplone.contentrules.conditions.HasPartOfType"
+      class=".haspartoftype.HasPartOfTypeAddForm"
+      permission="cmf.ManagePortal"
+      />
+
+    <!-- Edit Form -->
+    <browser:page 
+      for=".haspartoftype.IHasPartOfTypeCondition"
+      name="edit"
+      class=".haspartoftype.HasPartOfTypeEditForm"
+      permission="cmf.ManagePortal"
+      />
+
+    <!-- ruleAction -->
+    <plone:ruleCondition
+        name="mailtoplone.contentrules.conditions.HasPartOfType"
+        title="Has part of type"
+        description="Checks if the email contains a part of specified contenttype/subtype"
+        for="*"
+        event="zope.component.interfaces.IObjectEvent"
+        addview="mailtoplone.contentrules.conditions.HasPartOfType"
+        editview="edit"
+        />
+
+
 
 </configure>
