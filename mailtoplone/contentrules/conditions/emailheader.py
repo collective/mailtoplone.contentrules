@@ -42,7 +42,7 @@ from mailtoplone.contentrules import baseMessageFactory as _
 from mailtoplone.contentrules.config import vo_headers, vo_headers_default
 
 class IEmailHeaderCondition(Interface):
-    """Interface for the configurable aspects of a portal type condition.
+    """Interface for the configurable aspects of a EmailHeader condition.
     
     This is also used to create add and edit forms, below.
     """

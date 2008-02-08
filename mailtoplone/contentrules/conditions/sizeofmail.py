@@ -39,7 +39,7 @@ from mailtoplone.base.interfaces import IEmail
 from mailtoplone.contentrules import baseMessageFactory as _
 
 class ISizeOfMailCondition(Interface):
-    """Interface for the configurable aspects of a portal type condition.
+    """Interface for the configurable aspects of a SizeOfMail condition.
     
     This is also used to create add and edit forms, below.
     """

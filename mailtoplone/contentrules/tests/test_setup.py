@@ -158,11 +158,12 @@ class TestSetup(MailToPloneContentrulesTestCase):
         adding = getMultiAdapter((rule, self.portal.REQUEST), name='+condition')
         addview = getMultiAdapter((adding, self.portal.REQUEST), name=element.addview)
         
-        addview.createAndAdd(data={'type' : 'text/calendar'})#
+        addview.createAndAdd(data={'maintype' : 'text', 'subtype' : 'plain'})
         
         e = rule.conditions[0]
         self.failUnless(isinstance(e, HasPartOfTypeCondition))
-        self.assertEquals('text/calendar', e.type)#
+        self.assertEquals('text', e.maintype)
+        self.assertEquals('plain', e.subtype)
     
     def testHasPartOfTypeInvokeEditView(self): 
         element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.HasPartOfType')
@@ -175,18 +176,46 @@ class TestSetup(MailToPloneContentrulesTestCase):
         self.portal.inbox.invokeFactory('Email', 'e1')
         self.portal.inbox.e1.data = MULTIMSG
         
-        e.type = 'text/calendar'
+        e.maintype = 'text'
+        e.subtype = 'calendar'
         ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
         self.assertEquals(True, ex())
 
-        e.type = 'image/png'
+        e.maintype = 'image'
+        e.subtype = 'png'
         ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
         self.assertEquals(True, ex())
 
-        e.type = 'video/mpeg'
+        e.maintype = 'video'
+        e.subtype = 'mpeg'
         ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
         self.assertEquals(False, ex())
-       
+
+        e.maintype = 'video'
+        e.subtype = ''
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(False, ex())
+
+        e.maintype = ''
+        e.subtype = 'mpeg'
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(False, ex())
+
+        e.maintype = 'text'
+        e.subtype = ''
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.maintype = ''
+        e.subtype = 'plain'
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
+        e.maintype = ''
+        e.subtype = ''
+        ex = getMultiAdapter((self.portal, e, DummyEvent(self.portal.inbox.e1)), IExecutable)
+        self.assertEquals(True, ex())
+
     # condition: SizeOfMail
     def testSizeOfMailRegistered(self):
         element = getUtility(IRuleCondition, name='mailtoplone.contentrules.conditions.SizeOfMail')

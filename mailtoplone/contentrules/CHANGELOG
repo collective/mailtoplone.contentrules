@@ -1,3 +1,8 @@
+2008-02-08 mr_savage <hans-peter.locher@inquant.de>
+    * version 0.2 build 3
+    * refactored haspartoftype condition,
+      user can specify maintype/subtype pair seperately
+
 2008-02-04 mr_savage <hans-peter.locher@inquant.de>
     * version 0.2 build 2
     * added a new condition: SizeOfMail

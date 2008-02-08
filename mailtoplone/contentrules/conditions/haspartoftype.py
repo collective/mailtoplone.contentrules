@@ -40,14 +40,16 @@ from mailtoplone.base.interfaces import IEmail
 from mailtoplone.contentrules import baseMessageFactory as _
 
 class IHasPartOfTypeCondition(Interface):
-    """Interface for the configurable aspects of a portal type condition.
+    """Interface for the configurable aspects of a HasPartOfType condition.
     
     This is also used to create add and edit forms, below.
     """
-    type = schema.TextLine(title=_(u"Type"),
-                                    description=_(u"The contenttype/subtype pair to check for"),
-                                    required=True)
-
+    maintype = schema.TextLine(title=_(u"Maintype"),
+                                    description=_(u"The maintype to check for"),
+                                    required=False)
+    subtype = schema.TextLine(title=_(u"Subtype"),
+                                    description=_(u"The subtype to check for"),
+                                    required=False)
          
 class HasPartOfTypeCondition(SimpleItem):
     """The actual persistent implementation of the HasPartOfType condition.
@@ -55,12 +57,13 @@ class HasPartOfTypeCondition(SimpleItem):
     Note that we must mix in Explicit to keep Zope 2 security happy.
     """
     implements(IHasPartOfTypeCondition, IRuleElementData)
-    type = u''
+    maintype = u''
+    subtype = u''
     element = "mailtoplone.contentrules.conditions.HasPartOfType"
     
     @property
     def summary(self):
-        return _(u"Check if the email contains a part with contenttype/subtype pair ${type}", mapping=dict(type=self.type))
+        return _(u"Check if the email contains a part with maintype/subtype pair ${maintype}/${subtype}", mapping=dict(maintype=self.maintype,subtype=self.subtype))
 
 class HasPartOfTypeConditionExecutor(object):
     """The executor for this condition.
@@ -77,15 +80,24 @@ class HasPartOfTypeConditionExecutor(object):
 
     def __call__(self):
         obj = self.event.object
-        type = self.element.type
+        maintype = self.element.maintype
+        subtype = self.element.subtype
         if not IEmail.providedBy(obj):
             return False
         
         mailobj = email.message_from_string(obj.data)
         for part in mailobj.walk():
-            if part.get_content_type() == type:
+            if maintype and subtype:
+                if part.get_content_maintype() == maintype and part.get_content_subtype() == subtype:
+                    return True
+            if maintype and not subtype:
+                if part.get_content_maintype() == maintype:
+                    return True
+            if not maintype and subtype:
+                if part.get_content_subtype() == subtype:
+                    return True
+            if not maintype and not subtype:
                 return True
-        
         return False
 
 class HasPartOfTypeAddForm(AddForm):
@@ -93,7 +105,7 @@ class HasPartOfTypeAddForm(AddForm):
     """
     form_fields = form.FormFields(IHasPartOfTypeCondition)
     label = _(u"Add HasPartOfType Condition")
-    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified contenttype/subtype")
+    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified maintype/subtype")
     form_name = _(u"Configure element")
     
     def create(self, data):
@@ -108,7 +120,7 @@ class HasPartOfTypeEditForm(EditForm):
     """
     form_fields = form.FormFields(IHasPartOfTypeCondition)
     label = _(u"Edit HasPartOfType Condition")
-    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified contenttype/subtype")
+    description = _(u"A HasPartOfType Condition checks if the email contains a part of specified maintype/subtype")
     form_name = _(u"Configure element")
 
 # vim: set ft=python ts=4 sw=4 expandtab :

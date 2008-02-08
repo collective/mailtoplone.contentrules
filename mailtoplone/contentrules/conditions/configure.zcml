@@ -61,7 +61,7 @@
     <plone:ruleCondition
         name="mailtoplone.contentrules.conditions.HasPartOfType"
         title="Has part of type"
-        description="Checks if the email contains a part of specified contenttype/subtype"
+        description="Checks if the email contains a part of specified maintype/subtype"
         for="*"
         event="zope.component.interfaces.IObjectEvent"
         addview="mailtoplone.contentrules.conditions.HasPartOfType"

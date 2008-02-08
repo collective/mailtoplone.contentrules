@@ -39,8 +39,12 @@ Email Header:
 
 Has part of type:
 
-    Checks if the email contains a part of specified contenttype/subtype
+    Checks if the email contains a part of specified maintype/subtype
     pair.
+
+Size of mail:
+
+    Checks the size of a mail (<=, >=) against a user specified size in megabyte.
 
 Actions
 *******
